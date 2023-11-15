@@ -1,29 +1,74 @@
 ---
 title: "p8105_hw5_jz3573"
+
 output: github_document
+
+author: Jiangyuan Zhu 
+
 date: "2023-11-15"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rvest)
+library(tools)
+library(ggplot2)
+
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+# Question 2
+## Make a dataframe 
+read the names of files.
+```{r read the name of files }
+path_list=list.files(path = "./data" , full.names = TRUE ) 
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+input the context
+```{r input the context}
+context=purrr::map(path_list, read.csv) %>% 
+bind_rows()  %>% 
+round(digits = 2)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+input the names
+```{r input the names}
+name_df=list.files(path = "./data")  %>% 
+  file_path_sans_ext %>% 
+  data_frame()
+
+```
+
+combine the files and add a column name
+```{r combine the files and add a column name }
+full_df = bind_cols(name_df, context) 
+  
+names(full_df) [1]="id"
+
+```
+
+make it a computer-readable dataframe
+```{r make it a computer-readable dataframe}
+full_tidy_df = 
+  pivot_longer(
+    full_df, 
+    week_1:week_8,
+    names_to = "week", 
+    names_prefix = "week_",
+    values_to = "index")
+```
+
+## Make a plot
+```{r }
+full_tidy_df %>% 
+ggplot(aes(x=week , y=index, group = id, color = id))  + geom_line()
+
+```
+
+
+According to the plot, the experience groups have higher value than the control groups over weeks. 
+
+
+# Problem 3 
+
+```{r }
