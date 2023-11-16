@@ -70,5 +70,74 @@ According to the plot, the experience groups have higher value than the control 
 
 
 # Problem 3 
+## create 5000 datasets
+```{r create 5000 datasets}
+set.seed(1)
 
-```{r }
+output = vector("list", 5000)
+for (i in 1:5000) {
+  output[[i]] = rnorm(30,0,5 )
+}
+
+```
+
+## create a dataframe save 5000 μ̂ and p-value
+
+```{r create a dataframe  save 5000 μ̂ and p-value }
+output_si = vector ("list", 5000)
+
+for (i in 1:5000){
+output_si[[i]]= t.test(output[[i]], conf.level = 0.05 ) %>%
+  broom::tidy() %>% 
+  select(estimate, p.value) 
+}
+
+sim_result_0 = bind_rows(output_si)
+
+set.seed(1)
+```
+
+
+## repeat the procedure for μ={1}
+```{r repeat the prcedure for μ={1} }
+output = map(1:5000, ~ rnorm(30,1,5)  )
+             
+for (i in 1:5000){
+output_si[[i]]= t.test(output[[i]], conf.level = 0.05 ) %>%
+  broom::tidy() %>% 
+  select(estimate, p.value) 
+}
+
+sim_result_1 = bind_rows(output_si)
+
+set.seed(1)
+
+
+```
+
+## create a function 
+```{r}
+sim_power = function(mu) {
+  
+  data = tibble(
+    x = rnorm(n = 30, mean = mu, sd = 5)
+  )
+  
+  output = data %>%  
+    t.test() %>% 
+    broom::tidy() %>% 
+    select(estimate, p.value) 
+}
+
+sim_power_results = expand_grid(
+  mu_df = c(0, 1, 2, 3, 4, 5, 6), 
+  iteration = 1:5000
+) %>% 
+  mutate(
+    estimate = map(mu_df, sim_power)
+  ) |> 
+  unnest(estimate)
+```
+
+
+
